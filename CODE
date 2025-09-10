@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow - Makeup Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #ff69b4 50%, #dda0dd 50%);
+            background-attachment: fixed;
+            font-family: 'Arial', sans-serif;
+        }
+        .glow-text {
+            color: #ffffff;
+            text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4;
+            animation: glow 1.5s ease-in-out infinite alternate;
+        }
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px #ff69b4, 0 0 20px #ff69b4, 0 0 30px #ff69b4, 0 0 40px #ff69b4;
+            }
+            to {
+                text-shadow: 0 0 10px #daa520, 0 0 20px #daa520, 0 0 30px #daa520, 0 0 40px #daa520;
+            }
+        }
+        .product-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+        .cart-item {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        #cart-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff69b4;
+            color: white;
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1000;
+        }
+        #cart {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+            transition: right 0.3s ease;
+            overflow-y: auto;
+        }
+        #cart.open {
+            right: 0;
+        }
+        .error {
+            color: #ff0000;
+            font-weight: bold;
+        }
+        #payment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+        #payment-modal.open {
+            display: flex;
+        }
+        #payment-options {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <header class="text-center py-10 flex items-center justify-center">
+        <h1 class="text-6xl font-bold glow-text mr-4">Glow</h1>
+        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/656c8923-5e35-4b9e-b316-517ae8359a74.png" alt="Stylish logo for Glow makeup website featuring a glowing ring with elegant makeup brushes, in soft pink and purple hues reflecting femininity and radiance" class="w-24 h-24 rounded-full shadow-lg" onerror="this.src='https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/2a2ae4f7-bff1-4515-be05-a9d7b93261a3.png'">
+        <p class="text-white text-lg mt-2 ml-4">Enchanting Makeup for Every Moment</p>
+    </header>
+
+    <main class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="products">
+            <!-- Products will be populated here -->
+        </div>
+    </main>
+
+    <div id="cart-toggle" onclick="toggleCart()">Cart (0)</div>
+    <div id="cart">
+        <h2 class="text-2xl font-bold mb-4">Your Cart</h2>
+        <div id="cart-items"></div>
+        <div class="mt-4">
+            <p class="text-xl font-bold">Total: $<span id="total-price">0</span></p>
+            <button class="w-full bg-pink-500 text-white py-2 mt-4 rounded" id="place-order" onclick="placeOrder()">Place Order</button>
+        </div>
+    </div>
+
+    <div id="payment-modal">
+        <div id="payment-options">
+            <h3 class="text-xl font-bold mb-4">Choose Payment Method</h3>
+            <button class="bg-green-500 text-white py-2 px-4 rounded mr-4" onclick="selectPayment('Online')">Pay Online</button>
+            <button class="bg-blue-500 text-white py-2 px-4 rounded" onclick="selectPayment('Cash on Delivery')">Cash on Delivery</button>
+            <br><br>
+            <button class="bg-gray-500 text-white py-1 px-3 rounded" onclick="closePaymentModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // Sample products (up to 6)
+        const products = [
+            { id: 1, name: 'Velvet Lipstick', price: 15.99, image: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/af4d8bdc-95d7-4039-a3bf-2358ca058e58.png' },
+            { id: 2, name: 'Dewy Foundation', price: 25.99, image: 'https://img.freepik.com/premium-photo/makeup-foundation-photography_1010861-152.jpg' },
+            { id: 3, name: 'Shimmer Eyeshadow', price: 12.99, image: 'https://th.bing.com/th/id/OIP.vmPdYXvjfa6_XbDMNslEoQHaHa?o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3' },
+            { id: 4, name: 'Matte Mascara', price: 9.99, image: 'https://tse3.mm.bing.net/th/id/OIP.gIyArNO1WRupEplXcVSmIgAAAA?rs=1&pid=ImgDetMain&o=7&rm=3' },
+            { id: 5, name: 'Glow Highlighter', price: 18.99, image: 'https://tse1.explicit.bing.net/th/id/OIP.xoEjY4-dqRrr7Ooml30RBwAAAA?rs=1&pid=ImgDetMain&o=7&rm=30' },
+            { id: 6, name: 'Bronze Blush', price: 14.99, image: 'https://tse2.mm.bing.net/th/id/OIP.YHazkEfPUaNcJ9o99WsjBwHaFP?rs=1&pid=ImgDetMain&o=7&rm=3' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+        });
+
+        function renderProducts() {
+            const productsContainer = document.getElementById('products');
+            productsContainer.innerHTML = products.map(product => `
+                <div class="product-card p-4">
+                    <img src="${product.image}" alt="Professional makeup product photo of ${product.name} displayed on a clean background with soft lighting to highlight its texture and finish for glossy lipstick or smooth foundation" class="w-full h-48 object-cover rounded mb-4" onerror="this.src='https://placehold.co/300x300'">
+                    <h3 class="text-lg font-bold">${product.name}</h3>
+                    <p class="text-purple-600">$${product.price.toFixed(2)}</p>
+                    <button class="w-full bg-purple-500 text-white py-2 mt-2 rounded" onclick="addToCart(${product.id})">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+
+        let cart = [];
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            cart.push(product);
+            updateCart();
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const totalPrice = document.getElementById('total-price');
+            const cartToggle = document.getElementById('cart-toggle');
+            cartToggle.innerText = Cart (${cart.length});
+
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p>Your cart is empty.</p>';
+                totalPrice.innerText = '0';
+                return;
+            }
+
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <h4>${item.name}</h4>
+                    <p>$${item.price.toFixed(2)}</p>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            totalPrice.innerText = total.toFixed(2);
+        }
+
+        function placeOrder() {
+            if (cart.length === 0) {
+                alert('Your cart is empty. Please add some products before placing an order.');
+                return;
+            }
+            document.getElementById('payment-modal').classList.add('open');
+        }
+
+        function selectPayment(method) {
+            alert(Order placed successfully with ${method}! Total: $${document.getElementById('total-price').innerText}. Thank you for shopping with Glow!);
+            cart = [];
+            updateCart();
+            closePaymentModal();
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.remove('open');
+        }
+
+        function toggleCart() {
+            const cart = document.getElementById('cart');
+            cart.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
+</content>
+</create_file>
